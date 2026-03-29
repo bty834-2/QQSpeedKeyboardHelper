@@ -1,0 +1,23 @@
+[package]
+name = "qqspeed-keyboard"
+version = "0.1.2"
+description = "飞车按键助手 - 实时展示桌面程序"
+authors = ["Trae"]
+license = ""
+repository = ""
+default-run = "qqspeed-keyboard"
+edition = "2021"
+
+[lib]
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.5.1", features = [] }
+
+[dependencies]
+image = "0.25.10"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri = { version = "2.9.2", features = [] }
+windows = { version = "0.61.3", features = ["Win32_UI_Input_KeyboardAndMouse"] }
