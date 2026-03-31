@@ -1,6 +1,6 @@
 [package]
 name = "qqspeed-keyboard"
-version = "0.1.3"
+version = "0.1.4"
 description = "飞车按键助手 - 实时展示桌面程序"
 authors = ["Trae"]
 license = ""

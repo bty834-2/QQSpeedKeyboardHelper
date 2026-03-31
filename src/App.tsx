@@ -275,6 +275,20 @@ const applyAccentVars = (accent: string) => {
   root.style.setProperty('--accent-80', withAlpha(accent, 0.80))
 }
 
+const formatUnknownError = (error: unknown): string => {
+  if (error instanceof Error) {
+    return `${error.name}: ${error.message}`
+  }
+  if (typeof error === 'string') {
+    return error
+  }
+  try {
+    return JSON.stringify(error)
+  } catch {
+    return String(error)
+  }
+}
+
 function App() {
   const [bindings, setBindings] = useState<KeyBindings>(() => {
     const stored = window.localStorage.getItem(storageKey)
@@ -290,6 +304,7 @@ function App() {
   const [inputState, setInputState] = useState<InputState>(createEmptyInputState)
   const [runtimeMode, setRuntimeMode] = useState<RuntimeMode>('loading')
   const [editingBinding, setEditingBinding] = useState<BindingId | null>(null)
+  const [runtimeDetail, setRuntimeDetail] = useState<string | null>(null)
 
   // Settings
   const initialSettings = readSettings()
@@ -406,30 +421,62 @@ function App() {
   useEffect(() => {
     let disposed = false
     let removeListener: (() => void) | undefined
+    let pollTimer: number | null = null
+
+    const stopPolling = () => {
+      if (pollTimer !== null) {
+        window.clearInterval(pollTimer)
+        pollTimer = null
+      }
+    }
+
+    const startPolling = () => {
+      stopPolling()
+      pollTimer = window.setInterval(() => {
+        void (async () => {
+          try {
+            const latest = sanitizeInputState(await invoke<InputState>('get_input_state'))
+            if (!disposed) {
+              setInputState(latest)
+            }
+          } catch {
+            return
+          }
+        })()
+      }, 16)
+    }
 
     const bootstrap = async () => {
       try {
+        setRuntimeDetail(null)
         const loadedBindings = sanitizeBindings(
           await invoke<KeyBindings>('get_key_bindings'),
         )
         const loadedState = sanitizeInputState(
           await invoke<InputState>('get_input_state'),
         )
-        const unlisten = await listen<InputState>('input-state', (event) => {
-          setInputState(sanitizeInputState(event.payload))
-        })
-
-        if (disposed) {
-          unlisten()
-          return
-        }
-
-        removeListener = unlisten
         setBindings(loadedBindings)
         setInputState(loadedState)
         writeBrowserBindings(loadedBindings)
         setRuntimeMode('desktop')
-      } catch {
+
+        try {
+          const unlisten = await listen<InputState>('input-state', (event) => {
+            setInputState(sanitizeInputState(event.payload))
+          })
+
+          if (disposed) {
+            unlisten()
+            return
+          }
+
+          removeListener = unlisten
+          stopPolling()
+        } catch (error) {
+          setRuntimeDetail(`监听失败，已改用轮询：${formatUnknownError(error)}`)
+          startPolling()
+        }
+      } catch (error) {
         const localBindings = readBrowserBindings()
 
         if (disposed) {
@@ -437,6 +484,7 @@ function App() {
         }
 
         setBindings(localBindings)
+        setRuntimeDetail(`桌面通信初始化失败，当前为浏览器模式（需要窗口聚焦才会高亮）：${formatUnknownError(error)}`)
         setRuntimeMode('browser')
       }
     }
@@ -446,6 +494,7 @@ function App() {
     return () => {
       disposed = true
       removeListener?.()
+      stopPolling()
     }
   }, [])
 
@@ -662,6 +711,29 @@ function App() {
         </section>
 
         <aside className="controls-overlay">
+          {runtimeMode !== 'desktop' || runtimeDetail ? (
+            <div
+              style={{
+                width: 180,
+                padding: '8px 10px',
+                borderRadius: 12,
+                background: 'rgba(0, 0, 0, 0.6)',
+                border: '1px solid rgba(255, 255, 255, 0.14)',
+                color: 'rgba(255, 255, 255, 0.92)',
+                fontSize: 12,
+                lineHeight: 1.25,
+                textAlign: 'left',
+              }}
+            >
+              <div style={{ fontWeight: 600, marginBottom: 4 }}>
+                {runtimeMode === 'desktop' ? '桌面模式' : runtimeMode === 'browser' ? '浏览器模式' : '加载中'}
+              </div>
+              <div style={{ opacity: 0.86 }}>
+                {runtimeDetail ??
+                  (runtimeMode === 'browser' ? '请保持窗口聚焦，否则不会高亮' : '')}
+              </div>
+            </div>
+          ) : null}
           <button
             type="button"
             className="control-btn"
