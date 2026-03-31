@@ -584,8 +584,8 @@ function App() {
       new WebviewWindow('settings', {
         url: 'index.html?window=settings',
         title: '飞车按键助手 - 设置',
-        width: 580,
-        height: 420,
+        width: 640,
+        height: 560,
         resizable: true,
         decorations: true,
         alwaysOnTop: true,
@@ -799,6 +799,37 @@ export function SettingsWindow() {
   }, [])
 
   useEffect(() => {
+    let raf1 = 0
+    let raf2 = 0
+
+    const resizeToFit = async () => {
+      try {
+        const monitor = await primaryMonitor()
+        const maxWidth = monitor ? Math.max(640, monitor.size.width - 80) : 1280
+        const maxHeight = monitor ? Math.max(560, monitor.size.height - 80) : 900
+        const contentWidth = Math.max(document.documentElement.scrollWidth, document.body.scrollWidth)
+        const contentHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight)
+        const width = Math.min(Math.max(640, contentWidth), maxWidth)
+        const height = Math.min(Math.max(560, contentHeight), maxHeight)
+        await getCurrentWindow().setSize(new LogicalSize(width, height))
+      } catch {
+        return
+      }
+    }
+
+    raf1 = window.requestAnimationFrame(() => {
+      raf2 = window.requestAnimationFrame(() => {
+        void resizeToFit()
+      })
+    })
+
+    return () => {
+      window.cancelAnimationFrame(raf1)
+      window.cancelAnimationFrame(raf2)
+    }
+  }, [runtimeMode])
+
+  useEffect(() => {
     writeSettings({ scale, keyBg, keyActiveBg, keyTextColor, bgOpacity })
     
     applyAccentVars(keyActiveBg)
@@ -854,6 +885,12 @@ export function SettingsWindow() {
         ))}
       </div>
       <main className="settings-main">
+        <div className="settings-banner" role="status" aria-live="polite">
+          <div className="settings-banner-title">重要提示</div>
+          <div className="settings-banner-text">
+            如果游戏时按键没有高亮，请以管理员身份运行本程序（右键程序图标 → 以管理员身份运行）。
+          </div>
+        </div>
         <section className="settings-group">
           <div className="group-header">外观设置</div>
           <div className="settings-grid row-two-cols">
