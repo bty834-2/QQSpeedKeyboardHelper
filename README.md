@@ -2,7 +2,7 @@
 
 用于 QQ 飞车的桌面按键可视化工具：在桌面上常驻显示方向键/漂移/氮气等按键，并在对应触发键按下时高亮。、
 
-[点击下载软件](https://github.com/bty834-2/-/releases/download/v1/qqspeedkeyboard_0.1.2_x64-setup.exe)
+[点击下载软件](https://github.com/bty834-2/QQSpeedKeyboardHelper/releases/download/v1/qqspeedkeyboardhelper_0.1.5_x64-setup.exe)
 
 ## 预览
 
