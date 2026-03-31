@@ -11,8 +11,9 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{
     GetAsyncKeyState, VK_BACK, VK_CAPITAL, VK_DOWN, VK_ESCAPE, VK_LCONTROL, VK_LEFT, VK_LMENU,
     VK_LSHIFT, VK_OEM_1, VK_OEM_2, VK_OEM_3, VK_OEM_4, VK_OEM_5, VK_OEM_6, VK_OEM_7, VK_OEM_COMMA,
     VK_OEM_MINUS, VK_OEM_PERIOD, VK_OEM_PLUS, VK_RCONTROL, VK_RETURN, VK_RIGHT, VK_RMENU, VK_RSHIFT,
-    VK_SPACE, VK_TAB, VK_UP, VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, VK_F6, VK_F7, VK_F8, VK_F9, VK_F10,
-    VK_F11, VK_F12, VK_DELETE, VK_INSERT, VK_HOME, VK_END, VK_PRIOR, VK_NEXT,
+    VK_SPACE, VK_TAB, VK_UP, VK_ADD, VK_DECIMAL, VK_DELETE, VK_DIVIDE, VK_END, VK_F1, VK_F10,
+    VK_F11, VK_F12, VK_F2, VK_F3, VK_F4, VK_F5, VK_F6, VK_F7, VK_F8, VK_F9, VK_HOME, VK_INSERT,
+    VK_MULTIPLY, VK_NEXT, VK_NUMPAD0, VK_PRIOR, VK_SUBTRACT,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -212,7 +213,22 @@ fn code_to_virtual_key(code: &str) -> Option<i32> {
         }
     }
 
+    if let Some(number) = code.strip_prefix("Numpad") {
+        let mut chars = number.chars();
+        let value = chars.next()?;
+        if chars.next().is_none() && value.is_ascii_digit() {
+            let digit = value.to_digit(10)? as i32;
+            return Some(VK_NUMPAD0.0 as i32 + digit);
+        }
+    }
+
     match code {
+        "NumpadDecimal" => Some(VK_DECIMAL.0 as i32),
+        "NumpadDivide" => Some(VK_DIVIDE.0 as i32),
+        "NumpadMultiply" => Some(VK_MULTIPLY.0 as i32),
+        "NumpadSubtract" => Some(VK_SUBTRACT.0 as i32),
+        "NumpadAdd" => Some(VK_ADD.0 as i32),
+        "NumpadEnter" => Some(VK_RETURN.0 as i32),
         "ArrowUp" => Some(VK_UP.0 as i32),
         "ArrowDown" => Some(VK_DOWN.0 as i32),
         "ArrowLeft" => Some(VK_LEFT.0 as i32),

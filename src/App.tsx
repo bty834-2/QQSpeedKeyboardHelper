@@ -83,6 +83,13 @@ const supportedKeyLabels = Object.fromEntries([
     return [`Key${letter}`, letter]
   }),
   ...Array.from({ length: 10 }, (_, index) => [`Digit${index}`, String(index)]),
+  ...Array.from({ length: 10 }, (_, index) => [`Numpad${index}`, `Num${index}`]),
+  ['NumpadDecimal', 'Num.'],
+  ['NumpadDivide', 'Num/'],
+  ['NumpadMultiply', 'Num*'],
+  ['NumpadSubtract', 'Num-'],
+  ['NumpadAdd', 'Num+'],
+  ['NumpadEnter', 'NumEnt'],
   ['ArrowUp', '⬆'],
   ['ArrowDown', '⬇'],
   ['ArrowLeft', '⬅'],
